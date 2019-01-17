@@ -57,8 +57,7 @@ const updateThngRoot = (thng, iotaRoot) => {
   const customFields = Object.assign(thng.customFields || {}, { iotaRoot });
   return (thng.customFields && thng.customFields.iotaRoot)
     ? Promise.resolve(thng)
-    : app.thng(thng.id)
-        .update({ customFields });
+    : app.thng(thng.id).update({ customFields });
 };
 
 /**
