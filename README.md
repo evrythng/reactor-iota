@@ -6,7 +6,7 @@ blockchain network.
 
 ## Configure
 
-1. Deploy this Reactor script in an application within that project, not 
+1. Deploy this Reactor script in an application within a project, not 
    forgetting to specify the `dependencies` in `package.json`.
 2. Check the `NODE_ADDRESS` is correct for your usage.
 3. Ensure that the `ACTION_TYPE_CONFIRMATION` exists in the same project as the 
