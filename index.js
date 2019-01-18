@@ -54,10 +54,12 @@ const sendToIOTA = (action, thng) => {
  * @returns {Promise} Promise that resolves once the Thng is updated.
  */
 const updateThngRoot = (thng, iotaRoot) => {
+  if (thng.customFields && thng.customFields.iotaRoot) {
+    return Promise.resolve(thng);
+  }
+
   const customFields = Object.assign(thng.customFields || {}, { iotaRoot });
-  return (thng.customFields && thng.customFields.iotaRoot)
-    ? Promise.resolve(thng)
-    : app.thng(thng.id).update({ customFields });
+  return app.thng(thng.id).update({ customFields });
 };
 
 /**
@@ -82,6 +84,8 @@ const createConfirmation = (thng, originalAction) => {
 // @filter(onActionCreated) action.customFields.sendToIOTA=true
 const onActionCreated = (event) => {
   const { action } = event;
+  logger.info(`Sending action ${action.id} to IOTA`);
+
   readThng(action.thng)
     .then(thng => sendToIOTA(action, thng))
     .then(res => updateThngRoot(res.thng, res.iotaRoot))
@@ -89,5 +93,3 @@ const onActionCreated = (event) => {
     .catch(err => logger.error(err.message || err.errors[0]))
     .then(done);
 };
-
-module.exports = { onActionCreated };
