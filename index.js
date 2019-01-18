@@ -8,22 +8,14 @@ const DEPTH = 3;
 const MWM = 9;
 const ACTION_TYPE_CONFIRMATION = '_sentToIOTA';
 
-/**
- * Read a Thng by ID.
- *
- * @param {string} id - ID of the Thng to read.
- * @returns {Promise} Promise that resolves the full Thng resource.
- */
-const readThng = id => app.thng(id).read();
+let action, thng;
 
 /**
  * Send the action's SHA 256 hash to IOTA.
  *
- * @param {object} action - The action to encode.
- * @param {object} thng - The Thng the action is associated with.
  * @returns {Promise} Promise that resolves the Thng, and the new MAM root.
  */
-const sendToIOTA = (action, thng) => {
+const sendToIOTA = () => {
   // Hash the action with SHA256
   const sha256 = hashJs.sha256()
     .update(jsonSortify(action))
@@ -42,18 +34,17 @@ const sendToIOTA = (action, thng) => {
   return Mam.attach(message.payload, message.address, DEPTH, MWM)
     .then(() => {
       logger.debug(`MAM root: ${message.root}`);
-      return { thng, iotaRoot: message.root };
+      return message.root;
     });
 };
 
 /**
  * Update the Thng with the IOTA MAM root, if it doesn't already have one.
  *
- * @param {object} thng - The Thng to update.
  * @param {string} iotaRoot - Root address for the MAM.
  * @returns {Promise} Promise that resolves once the Thng is updated.
  */
-const updateThngRoot = (thng, iotaRoot) => {
+const updateThngRoot = (iotaRoot) => {
   if (thng.customFields && thng.customFields.iotaRoot) {
     return Promise.resolve(thng);
   }
@@ -65,15 +56,13 @@ const updateThngRoot = (thng, iotaRoot) => {
 /**
  * Create a confirmation action containing the original action and the IOTA root
  *
- * @param {object} thng - The Thng to create an action on.
- * @param {object} originalAction - The original action to include in the confirmation.
  * @returns {Promise} Promise that resolves to the confirmation action.
  */
-const createConfirmation = (thng, originalAction) => {
+const createConfirmation = () => {
   const payload = {
     thng: thng.id,
     type: ACTION_TYPE_CONFIRMATION,
-    customFields: { originalAction, iotaRoot: thng.customFields.iotaRoot },
+    customFields: { originalAction: action, iotaRoot: thng.customFields.iotaRoot },
   };
   return app.thng(thng.id)
     .action(ACTION_TYPE_CONFIRMATION)
@@ -83,13 +72,21 @@ const createConfirmation = (thng, originalAction) => {
 
 // @filter(onActionCreated) action.customFields.sendToIOTA=true
 const onActionCreated = (event) => {
-  const { action } = event;
-  logger.info(`Sending action ${action.id} to IOTA`);
+  logger.info(`Sending action ${event.action.id} to IOTA`);
 
-  readThng(action.thng)
-    .then(thng => sendToIOTA(action, thng))
-    .then(res => updateThngRoot(res.thng, res.iotaRoot))
-    .then(thng => createConfirmation(thng, action))
+  Promise.all([
+    app.action('all', event.action.id).read(),
+    app.thng(event.action.thng).read(),
+  ])
+    .then((results) => {
+      action = results[0];
+      thng = results[1];
+    })
+    .then(sendToIOTA)
+    .then(updateThngRoot)
+    .then(createConfirmation)
     .catch(err => logger.error(err.message || err.errors[0]))
     .then(done);
 };
+
+module.exports = { onActionCreated };
