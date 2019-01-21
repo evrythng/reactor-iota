@@ -6,14 +6,14 @@ const Mam = require('@iota/mam');
 const NODE_ADDRESS = 'https://nodes.devnet.thetangle.org:443';
 const DEPTH = 3;
 const MWM = 9;
-const ACTION_TYPE_CONFIRMATION = '_sentToIOTA';
+const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';
 
 let action, thng;
 
 /**
  * Send the action's SHA 256 hash to IOTA.
  *
- * @returns {Promise} Promise that resolves the Thng, and the new MAM root.
+ * @returns {Promise} Promise that resolves the message root, and the new MAM state.
  */
 const sendToIOTA = () => {
   // Hash the action with SHA256
@@ -22,34 +22,32 @@ const sendToIOTA = () => {
     .digest('hex');
   logger.debug(`Action SHA256: ${sha256}`);
 
-  // Prepare the IOTA payload
-  const mamState = Mam.changeMode(Mam.init(NODE_ADDRESS), 'public');
-  const message = Mam.create(mamState, asciiToTrytes(sha256));
-
-  // Use pre-recorded MAM root, if any
-  if(thng.customFields && thng.customFields.iotaRoot) {
-    message.root = thng.customFields.iotaRoot;
+  // Use pre-recorded MAM state, else use a new one
+  let mamState = Mam.changeMode(Mam.init(NODE_ADDRESS), 'public');
+  if(thng.customFields && thng.customFields.iotaMamState) {
+    mamState = thng.customFields.iotaMamState;
   }
-
-  return Mam.attach(message.payload, message.address, DEPTH, MWM)
-    .then(() => {
-      logger.debug(`MAM root: ${message.root}`);
-      return message.root;
-    });
+  
+  // Encode the payload
+  const { root, payload, address } = Mam.create(mamState, asciiToTrytes(sha256));
+  return Mam.attach(payload, address, DEPTH, MWM).then(() => {
+    logger.debug(`root: ${root}`);
+    return { root: root, mamState };
+  });
 };
 
 /**
- * Update the Thng with the IOTA MAM root, if it doesn't already have one.
+ * Update the Thng with the IOTA MAM root, if it does not exist, and always update the MAM state.
  *
- * @param {string} iotaRoot - Root address for the MAM.
+ * @param {object} data - root and mamState from sendToIOTA().
  * @returns {Promise} Promise that resolves once the Thng is updated.
  */
-const updateThngRoot = (iotaRoot) => {
-  if (thng.customFields && thng.customFields.iotaRoot) {
-    return Promise.resolve(thng);
+const updateThng = (data) => {
+  const customFields = Object.assign(thng.customFields || {}, { iotaMamState: data.mamState });
+  if (!thng.customFields.iotaRoot) {
+    customFields.iotaRoot = data.root;
   }
 
-  const customFields = Object.assign(thng.customFields || {}, { iotaRoot });
   return app.thng(thng.id).update({ customFields });
 };
 
@@ -61,11 +59,11 @@ const updateThngRoot = (iotaRoot) => {
 const createConfirmation = () => {
   const payload = {
     thng: thng.id,
-    type: ACTION_TYPE_CONFIRMATION,
+    type: CONFIRMATION_ACTION_TYPE,
     customFields: { originalAction: action, iotaRoot: thng.customFields.iotaRoot },
   };
   return app.thng(thng.id)
-    .action(ACTION_TYPE_CONFIRMATION)
+    .action(CONFIRMATION_ACTION_TYPE)
     .create(payload)
     .then(newAction => logger.info(`Confirmation action: ${newAction.id}`));
 };
@@ -77,13 +75,12 @@ const onActionCreated = (event) => {
   Promise.all([
     app.action('all', event.action.id).read(),
     app.thng(event.action.thng).read(),
-  ])
-    .then((results) => {
+  ]).then((results) => {
       action = results[0];
       thng = results[1];
     })
     .then(sendToIOTA)
-    .then(updateThngRoot)
+    .then(updateThng)
     .then(createConfirmation)
     .catch(err => logger.error(err.message || err.errors[0]))
     .then(done);
