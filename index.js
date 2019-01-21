@@ -32,7 +32,7 @@ const sendToIOTA = () => {
   const { root, payload, address } = Mam.create(mamState, asciiToTrytes(sha256));
   return Mam.attach(payload, address, DEPTH, MWM).then(() => {
     logger.debug(`root: ${root}`);
-    return { root: root, mamState };
+    return { root, mamState };
   });
 };
 
