@@ -24,8 +24,8 @@ require in addition to the one mentioned here.
 
 ## Testing
 
-If you do not currently have a value for `NODE_ADDRESS`, we recommending using
-the IOTA devnet for testing transactions:
+If you do not currently have a value for `NODE_ADDRESS`, we recommend using the
+IOTA devnet for testing transactions:
 
 ```
 https://nodes.devnet.thetangle.org:443
