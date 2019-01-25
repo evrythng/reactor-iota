@@ -3,7 +3,7 @@ const hashJs = require('hash.js');
 const jsonSortify = require('json.sortify');
 const Mam = require('@iota/mam');
 
-const NODE_ADDRESS = 'https://nodes.devnet.thetangle.org:443';
+const NODE_ADDRESS = '';
 const DEPTH = 3;
 const MWM = 9;
 const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';

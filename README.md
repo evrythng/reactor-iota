@@ -1,14 +1,15 @@
 # reactor-iota
 
-A Reactor Extension script to send EVRYTHNG actions to the IOTA decentralized 
-blockchain network.
+A Reactor Extension script to send EVRYTHNG 
+[actions](https://developers.evrythng.com/reference/actions) to the 
+[IOTA](https://www.iota.org/) decentralized blockchain network.
 
 
 ## Configure
 
 1. Deploy this Reactor script in an application within a project, not 
    forgetting to specify the `dependencies` in `package.json`.
-2. Check the `NODE_ADDRESS` is correct for your usage.
+2. Check the `NODE_ADDRESS` is correct for your usage (see _Testing_ below).
 3. Ensure that the `CONFIRMATION_ACTION_TYPE` action type exists in the same 
    project as the EVRYTHNG application hosting the Reactor script.
 
@@ -22,6 +23,13 @@ require in addition to the one mentioned here.
 
 
 ## Testing
+
+If you do not currently have a value for `NODE_ADDRESS`, we recommending using
+the IOTA devnet for testing transactions:
+
+```
+https://nodes.devnet.thetangle.org:443
+```
 
 Once the script is installed, test it by creating an action with the correct
 custom field specified on a Thng in the project's scope, for example:
