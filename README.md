@@ -1,35 +1,33 @@
 # reactor-iota
 
-A Reactor Extension script to send EVRYTHNG 
-[actions](https://developers.evrythng.com/reference/actions) to the 
-[IOTA](https://www.iota.org/) decentralized blockchain network.
+This Reactor Extension script is part of [EVRYTHNG's Blockchain Integration Hub](https://developers.evrythng.com/docs/blockchain-integration-hub).
+It can be used to send EVRYTHNG [actions](https://developers.evrythng.com/reference/actions) to the
+[IOTA](https://www.iota.org/) Distributed Ledger Technology and its networks.
 
+It uses IOTA's [MAM (Masked Authenticated Messaging)](https://docs.iota.org/)
+protocol to create chains of messages.
 
 ## Configure
 
-1. Deploy this Reactor script in an application within a project, not 
-   forgetting to specify the `dependencies` in `package.json`.
-2. Check the `NODE_ADDRESS` is correct for your usage (see _Testing_ below).
-3. Ensure that the `CONFIRMATION_ACTION_TYPE` action type exists in the same 
-   project as the EVRYTHNG application hosting the Reactor script.
-
+1.  Deploy this Reactor script in an application within a project, not
+    forgetting to specify the `dependencies` in `package.json`.
+2.  Check the `NODE_ADDRESS` is correct for your usage (see _Testing_ below).
+3.  Ensure that the `CONFIRMATION_ACTION_TYPE` action type exists in the same
+    project as the EVRYTHNG application hosting the Reactor script.
 
 ## Use
 
-The script will react to actions with a `sendToIOTA=true` custom field 
+The script will react to actions with a `sendToIOTA=true` custom field
 and will create a blockchain transaction for the action using the specified
 IOTA network address. You can include any extra custom fields that you may
 require in addition to the one mentioned here.
-
 
 ## Testing
 
 If you do not currently have a value for `NODE_ADDRESS`, we recommend using the
 IOTA devnet for testing transactions:
 
-```
-https://nodes.devnet.thetangle.org:443
-```
+    https://nodes.devnet.thetangle.org:443
 
 Once the script is installed, test it by creating an action with the correct
 custom field specified on a Thng in the project's scope, for example:
