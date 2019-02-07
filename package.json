@@ -2,7 +2,7 @@
   "name": "reactor-iota",
   "version": "1.0.0",
   "description": "An EVRYTHNG Blockchain Integration Hub reactor script for IOTA",
-  "main": "index.js",
+  "main": "main.js",
   "author": "EVRYTHNG",
   "license": "Apache-2.0",
   "dependencies": {
