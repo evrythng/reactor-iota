@@ -43,7 +43,11 @@ const sendToIOTA = () => {
  * @returns {Promise} Promise that resolves once the Thng is updated.
  */
 const updateThng = (data) => {
-  const customFields = Object.assign(thng.customFields || {}, { iotaMamState: data.mamState });
+  if (!thng.customFields) {
+    thng.customFields = {};
+  }
+  
+  const customFields = Object.assign(thng.customFields, { iotaMamState: data.mamState });
   if (!thng.customFields.iotaRoot) {
     customFields.iotaRoot = data.root;
   }
