@@ -8,7 +8,7 @@ const DEPTH = 3;
 const MWM = 9;
 const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';
 
-let action, thng;
+let action, target, targetType;
 
 /**
  * Send the action's SHA 256 hash to IOTA.
@@ -24,31 +24,39 @@ const sendToIOTA = () => {
 
   // Use pre-recorded MAM state, else use a new one
   let mamState = Mam.changeMode(Mam.init(NODE_ADDRESS), 'public');
-  if(thng.customFields && thng.customFields.iotaMamState) {
-    mamState = thng.customFields.iotaMamState;
+  if(target.customFields && target.customFields.iotaMamState) {
+    mamState = target.customFields.iotaMamState;
   }
-  
+
   // Encode the payload
-  const { root, payload, address } = Mam.create(mamState, asciiToTrytes(sha256));
-  return Mam.attach(payload, address, DEPTH, MWM).then(() => {
-    logger.debug(`root: ${root}`);
-    return { root, mamState };
-  });
+  try {
+    const { root, payload, address } = Mam.create(mamState, asciiToTrytes(sha256));
+    return Mam.attach(payload, address, DEPTH, MWM).then(() => {
+      logger.debug(`root: ${root}`);
+      return { root, mamState };
+    });
+  } catch (e) {
+    return Promise.reject('Failed to create and/or attach: ' + e.message + ' - ' + e.stack);
+  }
 };
 
 /**
- * Update the Thng with the IOTA MAM root, if it does not exist, and always update the MAM state.
+ * Update the target with the IOTA MAM root, if it does not exist, and always update the MAM state.
  *
  * @param {object} data - root and mamState from sendToIOTA().
- * @returns {Promise} Promise that resolves once the Thng is updated.
+ * @returns {Promise} Promise that resolves once the target is updated.
  */
-const updateThng = (data) => {
-  const customFields = Object.assign(thng.customFields || {}, { iotaMamState: data.mamState });
-  if (!thng.customFields.iotaRoot) {
+const updateTarget = (data) => {
+  if (!target.customFields) {
+    target.customFields = {};
+  }
+
+  const customFields = Object.assign(target.customFields, { iotaMamState: data.mamState });
+  if (!target.customFields.iotaRoot) {
     customFields.iotaRoot = data.root;
   }
 
-  return app.thng(thng.id).update({ customFields });
+  return app[targetType](target.id).update({ customFields });
 };
 
 /**
@@ -58,29 +66,52 @@ const updateThng = (data) => {
  */
 const createConfirmation = () => {
   const payload = {
-    thng: thng.id,
     type: CONFIRMATION_ACTION_TYPE,
-    customFields: { originalAction: action, iotaRoot: thng.customFields.iotaRoot },
+    [targetType]: action[targetType],
+    customFields: {
+      originalAction: action,
+      iotaRoot: target.customFields.iotaRoot,
+    },
   };
-  return app.thng(thng.id)
-    .action(CONFIRMATION_ACTION_TYPE)
+
+  return app.action(CONFIRMATION_ACTION_TYPE)
     .create(payload)
     .then(newAction => logger.info(`Confirmation action: ${newAction.id}`));
+};
+
+/**
+ * Read the complete target object from the action.
+ * This is either a Thng, product, or collection.
+ *
+ * @returns {Promise} A Promise that resolves once the process is complete.
+ */
+const readTarget = () => {
+  if (action.thng) {
+    targetType = 'thng';
+  } else if (action.product) {
+    targetType = 'product';
+  } else if (action.collection) {
+    targetType = 'collection';
+  } else {
+    return Promise.reject('No target was specified!');
+  }
+
+  return app[targetType](action[targetType]).read().then((res) => {
+    target = res;
+  });
 };
 
 // @filter(onActionCreated) action.customFields.sendToIOTA=true
 const onActionCreated = (event) => {
   logger.info(`Sending action ${event.action.id} to IOTA`);
 
-  Promise.all([
-    app.action('all', event.action.id).read(),
-    app.thng(event.action.thng).read(),
-  ]).then((results) => {
-      action = results[0];
-      thng = results[1];
+  app.action('all', event.action.id).read()
+    .then((res) => {
+      action = res;
     })
+    .then(readTarget)
     .then(sendToIOTA)
-    .then(updateThng)
+    .then(updateTarget)
     .then(createConfirmation)
     .catch(err => logger.error(err.message || err.errors[0]))
     .then(done);
