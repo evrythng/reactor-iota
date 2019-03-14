@@ -34,6 +34,9 @@ const sendToIOTA = () => {
     return Mam.attach(payload, address, DEPTH, MWM).then(() => {
       logger.debug(`root: ${root}`);
       return { root, mamState };
+    }).catch((e) => {
+      // e is a string
+      throw new Error(e);
     });
   } catch (e) {
     return Promise.reject('Failed to create and/or attach: ' + e.message + ' - ' + e.stack);
