@@ -123,6 +123,8 @@ async function sendToIOTA (action, target) {
  * @param {object} target the item
  * @param {string} targetType the type of item (thng, product, etc.)
  * @param {object} channelDetails - anchoring channel details from sendToIOTA().
+ * 
+ * @returns {object} the updated target
  */
 async function updateTarget (target, targetType, channelDetails) {
   const customFields = target.customFields || {};
@@ -142,7 +144,9 @@ async function updateTarget (target, targetType, channelDetails) {
  * @param {object} action The concerned action
  * @param {object} target The target on which the action was executed
  * @param {string} targetType the type of item (thng, product, etc.)
- *
+ * 
+ * @returns {object} the confirmation action
+ * 
  */
 async function createConfirmation (action, target, targetType) {
   const payload = {
