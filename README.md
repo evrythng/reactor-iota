@@ -10,7 +10,7 @@ IOTA is an open source DLT that enables sharing of any type of data (including I
 
 The [IOTA Streams](https://github.com/iotaledger/streams) second layer protocol 
 is used to create chains of messages anchored to the Tangle. 
-The [anchors]https://www.npmjs.com/package/@tangle-js/anchors) library 
+The [anchors](https://www.npmjs.com/package/@tangle-js/anchors) library 
 facilitates getting access to the IOTA Streams functionality through the abstraction of an "Anchoring Channel". 
 
 ## Configure
@@ -26,7 +26,7 @@ facilitates getting access to the IOTA Streams functionality through the abstrac
 The script will react to actions with a `sendToIOTA=true` custom field
 and will record a transaction for the action on the IOTA Distributed Ledger (DLT).
 The script will record transactions on the Chrysalis *mainnet* default nodes (hosted 
-by the IOTA Foundation) unless a specific node is defined bt the `NODE_ADDRESS` setting. 
+by the IOTA Foundation) unless a specific node is defined by the `NODE_ADDRESS` setting. 
 
 You can include any extra custom fields that you may
 require in addition to the one mentioned here. The target of the original action
