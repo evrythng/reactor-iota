@@ -59,8 +59,8 @@ async function readTarget (action) {
 /**
  * Send the action's SHA 256 hash to IOTA.
  *
- * @param {object} action The concerned action
- * @param {object} target The target on which the action is executed
+ * @param {object} action - The concerned action
+ * @param {object} target - The target on which the action is executed
  *
  * @returns {object} the channel details
  */
@@ -85,8 +85,8 @@ async function sendToIOTA (action, target) {
   }
 
   if (channelDetails) {
-    const channelID = channelDetails.channelID;
-    const seed = channelDetails.seed;
+    const { channelID, seed } = channelDetails;
+
     channel = await IotaAnchoringChannel.fromID(channelID, options).bind(seed);
 
     anchorageID = channelDetails.nextAnchorageID;
@@ -120,10 +120,10 @@ async function sendToIOTA (action, target) {
 /**
  * Update the target with the channel details
  *
- * @param {object} target the item
- * @param {string} targetType the type of item (thng, product, etc.)
+ * @param {object} target - the item
+ * @param {string} targetType - the type of item (thng, product, etc.)
  * @param {object} channelDetails - anchoring channel details from sendToIOTA().
- * 
+ *
  * @returns {object} the updated target
  */
 async function updateTarget (target, targetType, channelDetails) {
@@ -141,14 +141,16 @@ async function updateTarget (target, targetType, channelDetails) {
  * Create a confirmation action containing the original action
  *  and the IOTA anchoring channel ID
  *
- * @param {object} action The concerned action
- * @param {object} target The target on which the action was executed
- * @param {string} targetType the type of item (thng, product, etc.)
- * 
+ * @param {object} action - The concerned action
+ * @param {object} target - The target on which the action was executed
+ * @param {string} targetType - the type of item (thng, product, etc.)
+ *
  * @returns {object} the confirmation action
- * 
+ *
  */
 async function createConfirmation (action, target, targetType) {
+  const { channelID, publicKey } = target.customFields.iotaAnchoringChannel;
+
   const payload = {
     type: CONFIRMATION_ACTION_TYPE,
     [targetType]: action[targetType],
@@ -157,8 +159,8 @@ async function createConfirmation (action, target, targetType) {
         type: action.type,
         id: action.id
       },
-      channelID: target.customFields.iotaAnchoringChannel.channelID,
-      publicKey: target.customFields.iotaAnchoringChannel.publicKey
+      channelID,
+      publicKey
     }
   };
 
