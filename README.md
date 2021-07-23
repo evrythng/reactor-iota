@@ -4,12 +4,14 @@ This Reactor Extension script is part of
 [EVRYTHNG's Blockchain Integration Hub](https://developers.evrythng.com/docs/blockchain-integration-hub).
 It can be used to send EVRYTHNG
 [actions](https://developers.evrythng.com/reference/actions) to the
-[IOTA](https://chrysalis.docs.iota.org/) Distributed Ledger Technology and its networks.
+[IOTA](https://chrysalis.docs.iota.org/) Distributed Ledger Technology (DLT) and its networks.
 
-It uses the [IOTA Streams](https://github.com/iotaledger/streams) second layer protocol 
-to create chains of messages anchored to the Tangle. 
+IOTA is an open source DLT that enables sharing of any type of data (including IoT data) guaranteeing traceability of their source, alongside with integrity and immutability of the shared information, and dedicated access management, e.g., who can read what. In contrast with traditional blockchain-based DLTs, IOTA is based on a Directed Acyclic Graph, the Tangle. This [video](https://www.youtube.com/watch?v=ivWqqfzunhI) explains how the IOTA’s Tangle works. 
+
+The [IOTA Streams](https://github.com/iotaledger/streams) second layer protocol 
+is used to create chains of messages anchored to the Tangle. 
 The [anchors]https://www.npmjs.com/package/@tangle-js/anchors) library 
-is used to get access to the IOTA Streams functionality through the abstraction of an anchoring channel. 
+facilitates getting access to the IOTA Streams functionality through the abstraction of an "Anchoring Channel". 
 
 ## Configure
 
@@ -19,15 +21,16 @@ is used to get access to the IOTA Streams functionality through the abstraction 
 3.  Ensure that the `CONFIRMATION_ACTION_TYPE` action type exists in the same
     project as the EVRYTHNG application hosting the Reactor script.
 
-
 ## Use
 
 The script will react to actions with a `sendToIOTA=true` custom field
-and will create a DLT transaction for the action using the specified
-IOTA network address or the Chrysalis mainnet IF's default nodes. 
+and will record a transaction for the action on the IOTA Distributed Ledger (DLT).
+The script will record transactions on the Chrysalis *mainnet* default nodes (hosted 
+by the IOTA Foundation) unless a specific node is defined bt the `NODE_ADDRESS` setting. 
+
 You can include any extra custom fields that you may
 require in addition to the one mentioned here. The target of the original action
-can be either a `Thng`, `product`, or `collection`.
+can be either a Thng, product, or collection.
 
 Once the script has run, the resulting `channelID`, `seed` and `publicKey` are added
 to the target Thng, product, or collection's custom fields under a dictionary named 
