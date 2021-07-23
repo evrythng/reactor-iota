@@ -4,33 +4,12 @@ const jsonSortify = require('json.sortify');
 const { IotaAnchoringChannel } = require('@tangle-js/anchors');
 
 // Global EVRYTHNG objects
-const logger = global.logger;
-const app = global.app;
+const { logger, app } = global;
 
 const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';
 
 // Add here your node address. Otherwise the default IF mainnet Nodes will be used
 const NODE_ADDRESS = null;
-
-// @filter(onActionCreated) action.customFields.sendToIOTA=true
-const onActionCreated = (event) =>
-  runAsync(async () => {
-    logger.info(`Sending action ${event.action.id} to IOTA`);
-
-    const action = event.action;
-    const { target, targetType } = await readTarget(action);
-
-    // First step: record the hash on an anchoring channel (IOTA Stream)
-    const channelDetails = await sendToIOTA(action, target);
-
-    // Second step: update the target custom fields with the channel details
-    const updatedTarget = await updateTarget(target, targetType, channelDetails);
-
-    // Final step: Send the confirmation action
-    const confirmationAction = await createConfirmation(action, updatedTarget, targetType);
-
-    logger.info(`Confirmation action: ${confirmationAction.id}`);
-  });
 
 /**
  * Read the complete target object from the action.
@@ -38,7 +17,7 @@ const onActionCreated = (event) =>
  *
  * @returns target that contains all data about the target and the target type
  */
-async function readTarget (action) {
+async function readTarget(action) {
   let targetType;
 
   if (action.thng) {
@@ -64,14 +43,13 @@ async function readTarget (action) {
  *
  * @returns {object} the channel details
  */
-async function sendToIOTA (action, target) {
+async function sendToIOTA(action, target) {
   // Hash the action with SHA256
   const sha256 = hashJs.sha256().update(jsonSortify(action)).digest('hex');
   logger.debug(`Action SHA256: ${sha256}`);
 
   // We need to check whether a new channel is needed to be created or not
-  let channelDetails =
-    target.customFields && target.customFields.iotaAnchoringChannel;
+  let channelDetails = target.customFields && target.customFields.iotaAnchoringChannel;
   let channel;
   // The anchorage to be used to anchor this message (hash)
   let anchorageID;
@@ -80,7 +58,7 @@ async function sendToIOTA (action, target) {
   let options;
   if (NODE_ADDRESS) {
     options = {
-      node: NODE_ADDRESS
+      node: NODE_ADDRESS,
     };
   }
 
@@ -107,7 +85,7 @@ async function sendToIOTA (action, target) {
 
   const anchoringResult = await channel.anchor(
     Buffer.from(sha256),
-    anchorageID
+    anchorageID,
   );
 
   // The anchorage that will be used for the next one
@@ -126,7 +104,7 @@ async function sendToIOTA (action, target) {
  *
  * @returns {object} the updated target
  */
-async function updateTarget (target, targetType, channelDetails) {
+async function updateTarget(target, targetType, channelDetails) {
   const customFields = target.customFields || {};
 
   // We overwrite or assign the channel details
@@ -148,7 +126,7 @@ async function updateTarget (target, targetType, channelDetails) {
  * @returns {object} the confirmation action
  *
  */
-async function createConfirmation (action, target, targetType) {
+async function createConfirmation(action, target, targetType) {
   const { channelID, publicKey } = target.customFields.iotaAnchoringChannel;
 
   const payload = {
@@ -157,15 +135,42 @@ async function createConfirmation (action, target, targetType) {
     customFields: {
       originalAction: {
         type: action.type,
-        id: action.id
+        id: action.id,
       },
       channelID,
-      publicKey
-    }
+      publicKey,
+    },
   };
 
   const newAction = await app.action(CONFIRMATION_ACTION_TYPE).create(payload);
   return newAction;
 }
+
+// @filter(onActionCreated) action.customFields.sendToIOTA=true
+const onActionCreated = (event) => runAsync(async () => {
+  logger.info(`Sending action ${event.action.id} to IOTA`);
+
+  const { action } = event;
+  const { target, targetType } = await readTarget(action);
+
+  // First step: record the hash on an anchoring channel (IOTA Stream)
+  const channelDetails = await sendToIOTA(action, target);
+
+  // Second step: update the target custom fields with the channel details
+  const updatedTarget = await updateTarget(
+    target,
+    targetType,
+    channelDetails,
+  );
+
+  // Final step: Send the confirmation action
+  const confirmationAction = await createConfirmation(
+    action,
+    updatedTarget,
+    targetType,
+  );
+
+  logger.info(`Confirmation action: ${confirmationAction.id}`);
+});
 
 module.exports = { onActionCreated };
