@@ -11,6 +11,9 @@ const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';
 // Add here your node address. Otherwise the default IF mainnet Nodes will be used
 const NODE_ADDRESS = null;
 
+// IF Permanode
+const DEFAULT_PERMANODE_ADDRESS = 'https://chrysalis-chronicle.iota.org/api/mainnet/';
+
 /**
  * Read the complete target object from the action.
  * This is either a Thng, product, or collection.
@@ -59,6 +62,7 @@ async function sendToIOTA(action, target) {
   if (NODE_ADDRESS) {
     options = {
       node: NODE_ADDRESS,
+      permanode: DEFAULT_PERMANODE_ADDRESS,
     };
   }
 

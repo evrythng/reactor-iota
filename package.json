@@ -12,7 +12,7 @@
     "lint": "eslint main.js"
   },
   "dependencies": {
-    "@tangle-js/anchors": "^0.9.1",
+    "@tangle-js/anchors": "^0.9.2-beta4",
     "evrythng-extended": "^4.7.2",
     "hash.js": "^1.1.7",
     "json.sortify": "^2.2.2",
