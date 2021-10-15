@@ -3,13 +3,16 @@ const hashJs = require('hash.js');
 const jsonSortify = require('json.sortify');
 const { IotaAnchoringChannel } = require('@tangle-js/anchors');
 
-// Global EVRYTHNG objects
-const { logger, app } = global;
+// Global EVRYTHNG objects. In v2 API operator instead of app must be used
+const { logger, operator } = global;
 
 const CONFIRMATION_ACTION_TYPE = '_sentToIOTA';
 
 // Add here your node address. Otherwise the default IF mainnet Nodes will be used
 const NODE_ADDRESS = null;
+
+// IF Permanode
+const DEFAULT_PERMANODE_ADDRESS = 'https://chrysalis-chronicle.iota.org/api/mainnet/';
 
 /**
  * Read the complete target object from the action.
@@ -30,7 +33,7 @@ async function readTarget(action) {
     throw new Error('No target was specified!');
   }
 
-  const target = await app[targetType](action[targetType]).read();
+  const target = await operator[targetType](action[targetType]).read();
 
   return { target, targetType };
 }
@@ -59,6 +62,7 @@ async function sendToIOTA(action, target) {
   if (NODE_ADDRESS) {
     options = {
       node: NODE_ADDRESS,
+      permanode: DEFAULT_PERMANODE_ADDRESS,
     };
   }
 
@@ -110,7 +114,7 @@ async function updateTarget(target, targetType, channelDetails) {
   // We overwrite or assign the channel details
   customFields.iotaAnchoringChannel = channelDetails;
 
-  const result = await app[targetType](target.id).update({ customFields });
+  const result = await operator[targetType](target.id).update({ customFields });
 
   return result;
 }
@@ -142,7 +146,7 @@ async function createConfirmation(action, target, targetType) {
     },
   };
 
-  const newAction = await app.action(CONFIRMATION_ACTION_TYPE).create(payload);
+  const newAction = await operator.action(CONFIRMATION_ACTION_TYPE).create(payload);
   return newAction;
 }
 
